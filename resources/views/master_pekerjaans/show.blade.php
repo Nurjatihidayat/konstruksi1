@@ -6,7 +6,7 @@
                     🔧 {{ $masterPekerjaan->nama_pekerjaan }}
                 </h2>
                 <p class="text-muted small mt-1 mb-0">
-                    Kategori: <strong>{{ $masterPekerjaan->kategori }}</strong> · Durasi: <strong>{{ $masterPekerjaan->total_durasi_hari }} Hari</strong>
+                    project_id: <strong>{{ $masterPekerjaan->project_id }}</strong> · Durasi: <strong>{{ $masterPekerjaan->total_durasi_hari }} Hari</strong>
                 </p>
             </div>
             <div class="d-flex gap-2">

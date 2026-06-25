@@ -41,7 +41,7 @@
                                 <tr>
                                     <th class="text-uppercase small fw-bold">Kode</th>
                                     <th class="text-uppercase small fw-bold">Nama Pekerjaan</th>
-                                    <th class="text-uppercase small fw-bold">Kategori</th>
+                                    <th class="text-uppercase small fw-bold">project_id</th>
                                     <th class="text-uppercase small fw-bold text-center">Durasi (Hari)</th>
                                     <th class="text-uppercase small fw-bold text-center">Jml Detail</th>
                                     <th class="text-uppercase small fw-bold text-center">Aksi</th>
@@ -57,7 +57,13 @@
                                         <div class="text-muted small">{{ Str::limit($item->keterangan, 50) }}</div>
                                         @endif
                                     </td>
-                                    <td><span class="badge bg-secondary">{{ $item->kategori }}</span></td>
+                                   <td>
+                                        @if($item->project)
+                                            <span class="badge bg-primary">{{ $item->project->nama_proyek }}</span>
+                                        @else
+                                            <span class="badge bg-secondary">Tidak ada project</span>
+                                        @endif
+                                    </td>   
                                     <td class="text-center">
                                         <span class="badge bg-info text-dark">⏱ {{ $item->total_durasi_hari }} Hari</span>
                                     </td>

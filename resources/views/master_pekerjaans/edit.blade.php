@@ -32,11 +32,11 @@
                                 @enderror
                             </div>
 
-                            <!-- Kategori -->
+                            <!-- project_id -->
                             <div class="col-md-6">
-                                <label for="kategori" class="form-label fw-bold text-uppercase small text-muted">Kategori</label>
-                                <input type="text" class="form-control @error('kategori') is-invalid @enderror" id="kategori" name="kategori" value="{{ old('kategori', $masterPekerjaan->kategori) }}" required>
-                                @error('kategori')
+                                <label for="project_id" class="form-label fw-bold text-uppercase small text-muted">project_id</label>
+                                <input type="text" class="form-control @error('project_id') is-invalid @enderror" id="project_id" name="project_id" value="{{ old('project_id', $masterPekerjaan->project_id) }}" required>
+                                @error('project_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

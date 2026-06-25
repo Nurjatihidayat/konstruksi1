@@ -30,12 +30,18 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
-                            <!-- Kategori -->
+                            <!-- Project -->
                             <div class="col-md-6">
-                                <label for="kategori" class="form-label fw-bold text-uppercase small text-muted">Kategori</label>
-                                <input type="text" class="form-control @error('kategori') is-invalid @enderror" id="kategori" name="kategori" value="{{ old('kategori') }}"  placeholder="Contoh: Pekerjaan Persiapan">
-                                @error('kategori')
+                                <label for="project_id" class="form-label fw-bold text-uppercase small text-muted">Project</label>
+                                <select name="project_id" id="project_id" class="form-select @error('project_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Project --</option>
+                                    @foreach($projects as $project)
+                                        <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                            {{ $project->nama_proyek }}  {{-- ✅ GANTI nama_project → nama_proyek --}}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('project_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
