@@ -1,0 +1,409 @@
+
+GRAFIK PERKEMBANGAN
+AKTUAL MANAGER DAN 
+TARGET ADMIN
+
+KONTRUKSI BAJA 
+
+
+KATEGORI SUB / DTAIL PEKERJAAN 
+
+
+MASTER PEKERJAAN
+
+ 
+KATEGORI =  SAMA DETAIL PEKERJAAN = finising atau penambahan bahan 
+
+detail pekerjaan 
+detail material perdetail pekerjaan 
+
+
+
+DI GUDANG ADA BARANG HILANG ADA APROV DARI ADMIN  ADA FOTO /BUKTI
+
+
+DI ADMIN APROV 
+
+DI GUDANG AJUKAN 
+
+5. di pembuatan projek baru:
+   entry progres otomatis 0 tdk perlu diisi
+   input rencana pekerjaan dan rencana waktunya dalam hari
+   tanggal mulai diinput otomatis muncul tanggal selesai
+
+tambah menu baru
+
+MASTER PEKERJAAN
+
+ 
+KATEGORI =  SAMA DETAIL PEKERJAAN = finising atau penambahan bahan 
+
+detail pekerjaan 
+detail material perdetail pekerjaan 
+
+master pekerjaan, detail pekerjaan dan detail material per detail pekerjaan
+
+
+
+
+Berikut prompt yang bisa langsung Anda gunakan untuk AI coding (Cursor, Claude Code, GPT, Lovable, Bolt, atau Laravel Generator):
+
+---
+
+# PROMPT PENGEMBANGAN SISTEM MANAJEMEN PROYEK
+
+Lakukan pengembangan pada aplikasi Manajemen Proyek Laravel yang sudah ada dengan spesifikasi berikut:
+
+## 1. PERUBAHAN FORM TAMBAH PROYEK
+
+Saat membuat proyek baru:
+
+### Progress Awal
+
+* Field Progress tidak perlu diinput oleh user.
+* Progress otomatis dibuat **0%** saat proyek dibuat.
+
+### Rencana Pekerjaan
+
+Tambahkan field:
+
+* Rencana Pekerjaan
+
+  * Textarea
+  * Wajib diisi
+
+* Rencana Durasi Pekerjaan
+
+  * Input Number
+  * Satuan Hari
+  * Wajib diisi
+
+Contoh:
+
+```
+Pembangunan Gudang A 1 berapa hari material nya ada apa aja
+Durasi : 30 Hari
+```
+
+### Perhitungan Tanggal Otomatis
+
+Field:
+
+* Tanggal Mulai
+
+Saat user memilih tanggal mulai:
+
+```
+Tanggal Selesai =
+Tanggal Mulai + Durasi Hari
+```
+
+Contoh:
+
+```
+Tanggal Mulai : 01-06-2026
+Durasi : 30 Hari
+
+Tanggal Selesai otomatis :
+01-07-2026
+```
+
+Tanggal selesai dapat dihitung otomatis menggunakan Javascript tanpa reload halaman.
+
+---
+
+# 2. MENU BARU : MASTER PEKERJAAN
+
+Tambahkan menu baru pada sidebar:
+
+total waktu kerja juga 
+
+```
+MASTER PEKERJAAN
+```
+
+Menu ini digunakan sebagai master data pekerjaan proyek.
+
+Struktur:
+
+```
+Master Pekerjaan        durasi pekerjaan
+    └── Detail Pekerjaan dan kategori pekerjaan  durasi pekerjaan
+            └── Detail Material
+```
+rencana pekerjaan 
+
+id proyek id pekerjaan data nya dari master pekerjaan 
+
+
+---
+
+# 3. MASTER PEKERJAAN
+
+Buat CRUD lengkap:
+
+### Tabel Master Pekerjaan
+
+Field:
+
+| Field          | Tipe      |
+| -------------- | --------- |
+| id             | bigint    |
+| kode_pekerjaan | string    |
+| nama_pekerjaan | string    |
+| kategori       | string    |
+| keterangan     | text      |
+| created_at     | timestamp |
+
+Contoh:
+
+| Kode  | Nama             |
+| ----- | ---------------- |
+| PK001 | Finishing        |
+| PK002 | Penambahan Bahan |
+| PK003 | Struktur         |
+| PK004 | Pengecatan       |
+
+---
+
+# 4. DETAIL PEKERJAAN
+
+Setiap Master Pekerjaan memiliki banyak Detail Pekerjaan.
+
+### Relasi
+
+```
+Master Pekerjaan
+   hasMany
+Detail Pekerjaan
+```
+
+Field:
+
+| Field                 | Tipe        |
+| --------------------- | ----------- |
+| id                    | bigint      |
+| master_pekerjaan_id   | foreign key |
+| nama_detail_pekerjaan | string      |
+| satuan                | string      |
+| keterangan            | text        |
+
+Contoh:
+
+Master = Finishing
+
+Detail:
+
+```
+Pemasangan Keramik
+Pengecatan Dinding
+Pemasangan Plafon
+Pembersihan Akhir
+```
+
+---
+
+# 5. DETAIL MATERIAL PER DETAIL PEKERJAAN
+
+Setiap Detail Pekerjaan dapat memiliki banyak material.
+
+### Relasi
+
+```
+Detail Pekerjaan
+    hasMany
+Detail Material
+```
+
+Field:
+
+| Field               | Tipe        |
+| ------------------- | ----------- |
+| id                  | bigint      |
+| detail_pekerjaan_id | foreign key |
+| nama_material       | string      |
+| spesifikasi         | string      |
+| qty                 | decimal     |
+| satuan              | string      |
+| keterangan          | text        |
+
+Contoh:
+
+Detail Pekerjaan:
+
+```
+Pengecatan Dinding
+```
+
+Material:
+
+```
+Cat Dulux 25 Kg
+Kuas
+Roll Cat
+Thinner
+Lakban Kertas
+```
+
+---
+
+# 6. HIERARKI DATA
+
+Struktur data harus seperti berikut:
+
+```
+MASTER PEKERJAAN
+│
+├── Finishing
+│   ├── Pengecatan Dinding
+│   │      ├── Cat Dulux
+│   │      ├── Kuas
+│   │      └── Roll Cat
+│   │
+│   └── Pemasangan Keramik
+│          ├── Keramik
+│          ├── Semen
+│          └── Nat Keramik
+│
+└── Penambahan Bahan
+     ├── Penambahan Besi
+     └── Penambahan Beton
+```
+
+---
+
+# 7. TAMPILAN DATA
+
+Gunakan tampilan expandable tree:
+
+```
+[+] Finishing
+      [+] Pengecatan Dinding
+             - Cat Dulux
+             - Kuas
+             - Roll Cat
+
+      [+] Pemasangan Keramik
+             - Keramik
+             - Semen
+```
+
+atau menggunakan:
+
+* DataTable
+* Nested Table
+* Accordion Bootstrap
+
+agar mudah dikelola.
+
+---
+
+# 8. FITUR TAMBAHAN
+
+### Pencarian
+
+Cari berdasarkan:
+
+* Nama Pekerjaan
+* Kategori
+* Detail Pekerjaan
+* Material
+
+### Export
+
+* Export Excel
+* Export PDF
+
+### Hak Akses
+
+Admin:
+
+* Full CRUD
+
+Gudang:
+
+* Lihat data
+* Tambah material
+* Edit material
+
+Manajer:
+
+* Lihat seluruh data
+* Tidak dapat menghapus master data
+
+---
+
+# HASIL YANG DIINGINKAN
+
+Buat lengkap:
+
+* Migration
+* Model
+* Controller
+* Resource Route
+* Form Request Validation
+* Blade View
+* Bootstrap 5 UI
+* Relasi Eloquent
+* Seeder Contoh Data
+* DataTable
+* Export Excel dan PDF
+* Perhitungan otomatis tanggal selesai berdasarkan tanggal mulai + durasi hari
+* Progress proyek otomatis 0% saat proyek dibuat.
+
+
+
+
+
+Rencana Pekerjaan saya akan buat teks bebas (tidak perlu FK ke Master Pekerjaan agar lebih fleksibel). Langsung eksekusi!
+
+Task
+📦 Step 1: Migrations
+2026_06_23_000001_add_rencana_to_projects_table.php
+2026_06_23_000002_create_master_pekerjaans_table.php
+2026_06_23_000003_create_kategori_pekerjaans_table.php
+2026_06_23_000004_create_detail_pekerjaans_table.php
+2026_06_23_000005_create_detail_materials_table.php
+🗂️ Step 2: Models
+MasterPekerjaan.php
+KategoriPekerjaan.php
+DetailPekerjaan.php
+DetailMaterial.php
+Project.php
+🎮 Step 3: Controllers
+MasterPekerjaanController.php
+KategoriPekerjaanController.php
+DetailPekerjaanController.php
+DetailMaterialController.php
+Sekarang update ProjectController.php untuk mengubah logika store():
+
+ProjectController.php
+🛣️ Step 4: Routes
+web.php
+web.php
+🖥️ Step 5: Views — Master Pekerjaan
+index.blade.php
+create.blade.php
+edit.blade.php
+Sekarang buat view show.blade.php yang merupakan inti — tree view bertingkat dengan Alpine.js:
+
+show.blade.php
+📝 Step 6: Update Form Proyek (create.blade.php)
+create.blade.php
+Ada duplikasi di akhir file. Saya perbaiki:
+
+create.blade.php
+🗺️ Step 7: Update Navigation
+navigation.blade.php
+✅ Step 8: Jalankan Migration
+…\konstruksi > php artisan migrate
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it (Connection: mysql, SQL: select table_name as `name`, (data_length + index_length) as `size`, table_comment as `comment`, engine as `engine`, table_collation as `collation` from information_schema.tables where table_schema = 'test' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED') order by table_name)
+
+  
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:65
+      PDO::__construct("mysql:host=127.0.0.1;port=3306;dbname=test", "root", Object(SensitiveParameterValue), [])
+
