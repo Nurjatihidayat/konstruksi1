@@ -50,7 +50,7 @@ class MaterialController extends Controller
         $this->authorizeMaterialAction($project);
 
         $projectMaterial = $project->projectMaterials()->where('material_id', $material->id)->firstOrFail();
-        $material->jumlah_kebutuhan = $projectMaterial->jumlah_kebutuhan;
+        $material->jumlah_kebutuhan = $projectMaterial->jumlah_rencana ?? $projectMaterial->jumlah_kebutuhan;
 
         return view('materials.edit', compact('project', 'material'));
     }
@@ -65,24 +65,27 @@ class MaterialController extends Controller
             'jumlah_kebutuhan' => 'required|integer|min:0',
         ]);
 
-        $material->update([
-            'nama_material' => $request->nama_material,
-            'jumlah_tersedia' => $request->jumlah_tersedia,
-        ]);
+        if (auth()->user()->role === 'admin') {
+            $material->update([
+                'nama_material' => $request->nama_material,
+                'jumlah_tersedia' => $request->jumlah_tersedia,
+            ]);
+        }
 
         $projectMaterial = $project->projectMaterials()->where('material_id', $material->id)->first();
         if ($projectMaterial) {
             $projectMaterial->update([
+                'jumlah_rencana' => $request->jumlah_kebutuhan,
                 'jumlah_kebutuhan' => $request->jumlah_kebutuhan
             ]);
         }
 
         ActivityLog::create([
             'user_id' => auth()->id(),
-            'description' => 'Memperbarui material ' . $material->nama_material . ' pada proyek ' . $project->nama_proyek
+            'description' => 'Memperbarui kebutuhan material ' . $material->nama_material . ' pada proyek ' . $project->nama_proyek
         ]);
 
-        return redirect()->route('projects.show', $project)->with('success', 'Material updated successfully.');
+        return redirect()->route('projects.show', $project)->with('success', 'Kebutuhan material proyek berhasil diperbarui.');
     }
 
     public function destroy(Project $project, Material $material)

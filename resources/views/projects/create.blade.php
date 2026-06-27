@@ -1,88 +1,107 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-black text-2xl text-gray-800 leading-tight tracking-tighter uppercase">
-            {{ __('🏗️ Tambah Proyek Baru') }}
+            🏗️ Tambah Proyek Baru
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-2xl rounded-3xl border border-gray-100">
                 <div class="p-10">
-                    <form action="{{ route('projects.store') }}" method="POST" class="max-w-3xl">
+                    <form action="{{ route('projects.store') }}" method="POST" id="createProjectForm">
                         @csrf
+
+                        @if($errors->any())
+                        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-xl">
+                            <ul class="text-red-700 text-sm font-semibold list-disc pl-4">
+                                @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+                            </ul>
+                        </div>
+                        @endif
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
 
-
                             <!-- Nama Proyek -->
                             <div class="col-span-2">
-                                <x-input-label for="nama_proyek" :value="__('Nama Proyek')" class="font-bold text-gray-700 uppercase text-xs tracking-widest mb-2" />
-                                <x-text-input id="nama_proyek" class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition" type="text" name="nama_proyek" :value="old('nama_proyek')" required autofocus placeholder="Contoh: Pembangunan Jembatan Merah" />
-                                <x-input-error :messages="$errors->get('nama_proyek')" class="mt-2" />
+                                <label class="block font-bold text-gray-700 uppercase text-xs tracking-widest mb-2">Nama Proyek</label>
+                                <input type="text" name="nama_proyek" value="{{ old('nama_proyek') }}" required
+                                    class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                    placeholder="Contoh: Pembangunan Gedung Kantor">
                             </div>
-
 
                             <!-- Lokasi -->
                             <div class="col-span-2">
-                                <x-input-label for="lokasi" :value="__('Lokasi')" class="font-bold text-gray-700 uppercase text-xs tracking-widest mb-2" />
-                                <x-text-input id="lokasi" class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" type="text" name="lokasi" :value="old('lokasi')" required placeholder="Contoh: Jl. Sudirman No. 1, Jakarta" />
-                                <x-input-error :messages="$errors->get('lokasi')" class="mt-2" />
+                                <label class="block font-bold text-gray-700 uppercase text-xs tracking-widest mb-2">Lokasi</label>
+                                <input type="text" name="lokasi" value="{{ old('lokasi') }}" required
+                                    class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                    placeholder="Contoh: Jl. Sudirman No. 1, Jakarta">
                             </div>
 
-                            <!-- Manajer Assignment -->
-                            <div class="col-span-1">
-                                <x-input-label for="manager_id" :value="__('Penanggung Jawab (Manajer)')" class="font-bold text-gray-700 uppercase text-xs tracking-widest mb-2" />
-                                <select name="manager_id" id="manager_id" class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition" required>
+                            <!-- Manajer -->
+                            <div>
+                                <label class="block font-bold text-gray-700 uppercase text-xs tracking-widest mb-2">Penanggung Jawab (Manajer)</label>
+                                <select name="manager_id" required class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
                                     <option value="">-- Pilih Manajer --</option>
-                                    @foreach($managers as $manager)
-                                        <option value="{{ $manager->id }}" {{ old('manager_id') == $manager->id ? 'selected' : '' }}>
-                                            {{ $manager->name }}
-                                        </option>
+                                    @foreach($managers as $m)
+                                    <option value="{{ $m->id }}" {{ old('manager_id') == $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
                                     @endforeach
                                 </select>
-                                <x-input-error :messages="$errors->get('manager_id')" class="mt-2" />
-                            </div>
-
-                            <!-- Master Pekerjaan -->
-                            <div class="col-span-1">
-                                <x-input-label for="master_pekerjaan_id" :value="__('Master Pekerjaan')" class="font-bold text-gray-700 uppercase text-xs tracking-widest mb-2" />
-                                <select name="master_pekerjaan_id" id="master_pekerjaan_id" class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition" required>
-                                    <option value="" data-durasi="0">-- Pilih Master Pekerjaan --</option>
-                                    @foreach($masterPekerjaans as $master)
-                                        <option value="{{ $master->id }}" data-durasi="{{ $master->total_durasi_hari }}" {{ old('master_pekerjaan_id') == $master->id ? 'selected' : '' }}>
-                                            {{ $master->kode_pekerjaan }} - {{ $master->nama_pekerjaan }} ({{ $master->total_durasi_hari }} Hari)
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('master_pekerjaan_id')" class="mt-2" />
                             </div>
 
                             <!-- Tanggal Mulai -->
-                            <div class="col-span-1">
-                                <x-input-label for="tanggal_mulai" :value="__('Tanggal Mulai')" class="font-bold text-gray-700 uppercase text-xs tracking-widest mb-2" />
-                                <x-text-input id="tanggal_mulai" class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" type="date" name="tanggal_mulai" :value="old('tanggal_mulai')" required />
-                                <x-input-error :messages="$errors->get('tanggal_mulai')" class="mt-2" />
+                            <div>
+                                <label class="block font-bold text-gray-700 uppercase text-xs tracking-widest mb-2">Tanggal Mulai</label>
+                                <input type="date" name="tanggal_mulai" id="tanggal_mulai" value="{{ old('tanggal_mulai') }}" required
+                                    class="block w-full rounded-2xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- ======== MASTER PEKERJAAN MULTI SELECT ======== -->
+                        <div class="mb-8">
+                            <label class="block font-bold text-gray-700 uppercase text-xs tracking-widest mb-3">
+                                Master Pekerjaan <span class="text-indigo-500">(Bisa Pilih Beberapa — urutan sesuai daftar)</span>
+                            </label>
+
+                            <!-- Search -->
+                            <input type="text" id="searchMaster" placeholder="🔍 Cari master pekerjaan..."
+                                class="block w-full rounded-xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-sm mb-3">
+
+                            <!-- Checkbox list -->
+                            <div id="masterList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto border border-gray-100 rounded-2xl p-4 bg-gray-50">
+                                @foreach($masterPekerjaans as $master)
+                                <label class="master-item flex items-start gap-3 p-3 rounded-xl bg-white shadow-sm border border-gray-100 cursor-pointer hover:border-indigo-300 hover:shadow-md transition"
+                                    data-name="{{ strtolower($master->nama_pekerjaan) }}">
+                                    <input type="checkbox" name="master_pekerjaan_ids[]" value="{{ $master->id }}"
+                                        data-durasi="{{ $master->total_durasi_hari }}"
+                                        class="master-check mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
+                                        {{ is_array(old('master_pekerjaan_ids')) && in_array($master->id, old('master_pekerjaan_ids')) ? 'checked' : '' }}>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800">{{ $master->nama_pekerjaan }}</p>
+                                        <p class="text-xs text-gray-400">{{ $master->kode_pekerjaan }} &bull; {{ $master->total_durasi_hari }} Hari</p>
+                                    </div>
+                                </label>
+                                @endforeach
                             </div>
 
-                            <!-- Tanggal Selesai (otomatis, readonly) -->
-                            <div class="col-span-1">
-                                <x-input-label for="tanggal_selesai_display" :value="__('Tanggal Selesai (Otomatis)')" class="font-bold text-gray-700 uppercase text-xs tracking-widest mb-2" />
-                                <div class="relative">
-                                    <x-text-input id="tanggal_selesai_display" class="block w-full rounded-2xl border-gray-200 bg-gray-50 shadow-sm cursor-not-allowed text-gray-500" type="date" readonly placeholder="Akan dihitung otomatis" />
-                                    <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                        <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Otomatis</span>
+                            <!-- Selected summary -->
+                            <div id="selectedSummary" class="mt-4 hidden">
+                                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4">
+                                    <p class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-2">Pekerjaan Terpilih (Urutan Pelaksanaan):</p>
+                                    <ol id="selectedList" class="space-y-1 text-sm font-semibold text-indigo-900 list-decimal pl-5"></ol>
+                                    <div class="mt-3 pt-3 border-t border-indigo-100 flex gap-8 text-xs font-bold text-indigo-700">
+                                        <span>Total Durasi: <span id="totalDurasi" class="font-black text-indigo-900">0</span> Hari</span>
+                                        <span>Tanggal Selesai: <span id="tglSelesai" class="font-black text-indigo-900">—</span></span>
                                     </div>
                                 </div>
-                                <p class="text-[10px] text-gray-400 mt-1.5 font-medium">📅 Tanggal Mulai + Durasi Master Pekerjaan</p>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-end mt-10 gap-6 pt-6 border-t border-gray-50">
                             <a href="{{ route('projects.index') }}" class="text-xs font-black text-gray-400 hover:text-gray-900 transition uppercase tracking-widest">Batal</a>
-                            <x-primary-button class="rounded-2xl py-3 px-8 shadow-indigo-200 shadow-lg hover:shadow-indigo-300 transition-all duration-300">
-                                {{ __('SIMPAN PROYEK 🚀') }}
-                            </x-primary-button>
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl py-3 px-8 shadow-indigo-200 shadow-lg hover:shadow-indigo-300 transition-all duration-300 text-sm uppercase tracking-widest">
+                                SIMPAN PROYEK 🚀
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -91,28 +110,53 @@
     </div>
 
     <script>
-        function hitungTanggalSelesai() {
-            const mulai = document.getElementById('tanggal_mulai').value;
-            const selectMaster = document.getElementById('master_pekerjaan_id');
-            const durasi = parseInt(selectMaster.options[selectMaster.selectedIndex].getAttribute('data-durasi') || '0', 10);
-            const display = document.getElementById('tanggal_selesai_display');
+        const checkboxes = document.querySelectorAll('.master-check');
+        const selectedList = document.getElementById('selectedList');
+        const selectedSummary = document.getElementById('selectedSummary');
+        const totalDurasiEl = document.getElementById('totalDurasi');
+        const tglSelesaiEl = document.getElementById('tglSelesai');
 
-            if (mulai && durasi > 0) {
-                const tgl = new Date(mulai);
-                tgl.setDate(tgl.getDate() + durasi);
-                const yyyy = tgl.getFullYear();
-                const mm   = String(tgl.getMonth() + 1).padStart(2, '0');
-                const dd   = String(tgl.getDate()).padStart(2, '0');
-                display.value = `${yyyy}-${mm}-${dd}`;
+        function updateSummary() {
+            const checked = [...checkboxes].filter(c => c.checked);
+            if (checked.length === 0) {
+                selectedSummary.classList.add('hidden');
+                return;
+            }
+            selectedSummary.classList.remove('hidden');
+            selectedList.innerHTML = '';
+            let total = 0;
+            checked.forEach(c => {
+                const label = c.closest('label');
+                const name = label.querySelector('p.font-bold').textContent.trim();
+                const durasi = parseInt(c.dataset.durasi || 0);
+                total += durasi;
+                const li = document.createElement('li');
+                li.textContent = name + ' (' + durasi + ' hari)';
+                selectedList.appendChild(li);
+            });
+            totalDurasiEl.textContent = total;
+
+            const mulai = document.getElementById('tanggal_mulai').value;
+            if (mulai && total > 0) {
+                const d = new Date(mulai);
+                d.setDate(d.getDate() + total);
+                tglSelesaiEl.textContent = d.toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'});
             } else {
-                display.value = '';
+                tglSelesaiEl.textContent = '—';
             }
         }
 
-        document.getElementById('tanggal_mulai').addEventListener('change', hitungTanggalSelesai);
-        document.getElementById('master_pekerjaan_id').addEventListener('change', hitungTanggalSelesai);
-        
-        // Trigger calculation on load in case there's old value
-        window.addEventListener('load', hitungTanggalSelesai);
+        checkboxes.forEach(c => c.addEventListener('change', updateSummary));
+        document.getElementById('tanggal_mulai').addEventListener('change', updateSummary);
+
+        // Search
+        document.getElementById('searchMaster').addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.master-item').forEach(item => {
+                item.style.display = item.dataset.name.includes(q) ? '' : 'none';
+            });
+        });
+
+        window.addEventListener('load', updateSummary);
     </script>
 </x-app-layout>

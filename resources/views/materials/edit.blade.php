@@ -26,6 +26,7 @@
                                     name="nama_material"
                                     :value="old('nama_material', $material->nama_material)"
                                     required
+                                    readonly="{{ auth()->user()->role !== 'admin' ? 'readonly' : null }}"
                                 />
                                 @if(auth()->user()->role !== 'admin')
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

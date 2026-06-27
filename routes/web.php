@@ -13,11 +13,15 @@ use App\Http\Controllers\MasterPekerjaanController;
 use App\Http\Controllers\DetailPekerjaanController;
 use App\Http\Controllers\DetailMaterialController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PekerjaanController;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
-
+// Route untuk Pekerjaan (Manajer)
+Route::middleware(['auth'])->group(function () {
+    Route::resource('pekerjaans', PekerjaanController::class);
+});
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -42,13 +46,21 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // =====================
+    //  Admin, Manajer & Gudang routes
+    // =====================
+    Route::middleware(['role:admin,manajer,gudang'])->group(function () {
+        Route::resource('projects.materials', MaterialController::class)->except(['index', 'show']);
+    });
+
+    // =====================
     //  Admin & Manajer routes
     // =====================
     Route::middleware(['role:admin,manajer'])->group(function () {
         Route::resource('projects', ProjectController::class)->except(['index', 'show']);
-        Route::resource('projects.materials', MaterialController::class)->except(['index', 'show']);
         // Progress Update (Manager)
         Route::post('/projects/{project}/progress', [ProjectProgressController::class, 'store'])->name('projects.progress.store');
+        // Daily Log (Manajer / Admin)
+        Route::post('/projects/{project}/daily-log', [\App\Http\Controllers\ProjectDailyLogController::class, 'store'])->name('projects.daily-log.store');
     });
 
     // =====================

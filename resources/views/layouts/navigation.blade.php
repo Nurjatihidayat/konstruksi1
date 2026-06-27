@@ -26,6 +26,11 @@
                         {{ __('Master Pekerjaan') }}
                     </x-nav-link>
                     @endif
+                    @if(Auth::user()->role == 'manajer' || Auth::user()->role == 'admin')
+                    <x-nav-link :href="route('pekerjaans.index')" :active="request()->routeIs('pekerjaans.*')">
+                        {{ __('Pekerjaan') }}
+                    </x-nav-link>
+                    @endif
                     @if(Auth::user()->role == 'manajer' || Auth::user()->role == 'admin' || Auth::user()->role == 'gudang')
                     <x-nav-link :href="route('material-requests.index')" :active="request()->routeIs('material-requests.*')">
                         {{ __('Permintaan Material') }}
@@ -109,6 +114,11 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(Auth::user()->role == 'manajer' || Auth::user()->role == 'admin')
+            <x-responsive-nav-link :href="route('pekerjaans.index')" :active="request()->routeIs('pekerjaans.*')">
+                {{ __('Pekerjaan') }}
+            </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

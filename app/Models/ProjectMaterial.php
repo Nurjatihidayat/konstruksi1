@@ -12,6 +12,7 @@ class ProjectMaterial extends Model
     protected $fillable = [
         'project_id',
         'material_id',
+        'jumlah_rencana',      // From detail material qty
         'jumlah_kebutuhan',
         'jumlah_dialokasikan', // On the way
         'jumlah_tersedia',     // At site
