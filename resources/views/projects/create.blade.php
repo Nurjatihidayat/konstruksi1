@@ -68,19 +68,34 @@
                                 class="block w-full rounded-xl border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-sm mb-3">
 
                             <!-- Checkbox list -->
-                            <div id="masterList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto border border-gray-100 rounded-2xl p-4 bg-gray-50">
+                            <div id="masterList" class="flex flex-col gap-4 max-h-96 overflow-y-auto border border-gray-100 rounded-2xl p-4 bg-gray-50">
                                 @foreach($masterPekerjaans as $master)
-                                <label class="master-item flex items-start gap-3 p-3 rounded-xl bg-white shadow-sm border border-gray-100 cursor-pointer hover:border-indigo-300 hover:shadow-md transition"
-                                    data-name="{{ strtolower($master->nama_pekerjaan) }}">
-                                    <input type="checkbox" name="master_pekerjaan_ids[]" value="{{ $master->id }}"
-                                        data-durasi="{{ $master->total_durasi_hari }}"
-                                        class="master-check mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
-                                        {{ is_array(old('master_pekerjaan_ids')) && in_array($master->id, old('master_pekerjaan_ids')) ? 'checked' : '' }}>
-                                    <div>
-                                        <p class="text-sm font-bold text-gray-800">{{ $master->nama_pekerjaan }}</p>
-                                        <p class="text-xs text-gray-400">{{ $master->kode_pekerjaan }} &bull; {{ $master->total_durasi_hari }} Hari</p>
+                                <div class="master-item bg-white shadow-sm border border-gray-100 rounded-xl p-4 transition" data-name="{{ strtolower($master->nama_pekerjaan) }}">
+                                    <label class="flex items-start gap-3 cursor-pointer">
+                                        <input type="checkbox" name="master_pekerjaan_ids[]" value="{{ $master->id }}"
+                                            class="master-check mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
+                                            {{ is_array(old('master_pekerjaan_ids')) && in_array($master->id, old('master_pekerjaan_ids')) ? 'checked' : '' }}>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-800 master-name">{{ $master->nama_pekerjaan }}</p>
+                                            <p class="text-xs text-gray-400">{{ $master->kode_pekerjaan }}</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <!-- Detail Pekerjaans (Sub-Pekerjaan) -->
+                                    <div class="mt-3 ml-7 space-y-2 detail-container">
+                                        @foreach($master->detailPekerjaans as $detail)
+                                        <label class="flex items-center gap-3 cursor-pointer border-t border-gray-50 pt-2">
+                                            <input type="checkbox" name="detail_pekerjaan_ids[]" value="{{ $detail->id }}"
+                                                data-durasi="{{ $detail->durasi_hari }}"
+                                                data-master-id="{{ $master->id }}"
+                                                class="detail-check rounded text-blue-500 focus:ring-blue-400"
+                                                {{ is_array(old('detail_pekerjaan_ids')) && in_array($detail->id, old('detail_pekerjaan_ids')) ? 'checked' : '' }}>
+                                            <div class="text-xs text-gray-700 font-medium detail-name">{{ $detail->nama_detail_pekerjaan }}</div>
+                                            <div class="text-[10px] text-gray-400 ml-auto whitespace-nowrap">{{ $detail->durasi_hari }} Hari</div>
+                                        </label>
+                                        @endforeach
                                     </div>
-                                </label>
+                                </div>
                                 @endforeach
                             </div>
 
@@ -110,30 +125,70 @@
     </div>
 
     <script>
-        const checkboxes = document.querySelectorAll('.master-check');
+        const masterCheckboxes = document.querySelectorAll('.master-check');
+        const detailCheckboxes = document.querySelectorAll('.detail-check');
         const selectedList = document.getElementById('selectedList');
         const selectedSummary = document.getElementById('selectedSummary');
         const totalDurasiEl = document.getElementById('totalDurasi');
         const tglSelesaiEl = document.getElementById('tglSelesai');
 
+        // Auto-check details when master is checked
+        masterCheckboxes.forEach(mc => {
+            mc.addEventListener('change', function() {
+                const container = this.closest('.master-item').querySelector('.detail-container');
+                if (container) {
+                    const dcs = container.querySelectorAll('.detail-check');
+                    dcs.forEach(dc => dc.checked = this.checked);
+                }
+                updateSummary();
+            });
+        });
+
+        // Update master checkbox state when details change
+        detailCheckboxes.forEach(dc => {
+            dc.addEventListener('change', function() {
+                const item = this.closest('.master-item');
+                const mc = item.querySelector('.master-check');
+                const anyChecked = item.querySelectorAll('.detail-check:checked').length > 0;
+                mc.checked = anyChecked;
+                updateSummary();
+            });
+        });
+
         function updateSummary() {
-            const checked = [...checkboxes].filter(c => c.checked);
-            if (checked.length === 0) {
+            const checkedDetails = [...detailCheckboxes].filter(c => c.checked);
+            if (checkedDetails.length === 0) {
                 selectedSummary.classList.add('hidden');
+                totalDurasiEl.textContent = '0';
+                tglSelesaiEl.textContent = '—';
                 return;
             }
             selectedSummary.classList.remove('hidden');
             selectedList.innerHTML = '';
+            
             let total = 0;
-            checked.forEach(c => {
-                const label = c.closest('label');
-                const name = label.querySelector('p.font-bold').textContent.trim();
-                const durasi = parseInt(c.dataset.durasi || 0);
+            const grouped = {};
+            
+            checkedDetails.forEach(dc => {
+                const masterId = dc.dataset.masterId;
+                if (!grouped[masterId]) {
+                    const masterName = dc.closest('.master-item').querySelector('.master-name').textContent.trim();
+                    grouped[masterId] = { name: masterName, details: [], totalDurasi: 0 };
+                }
+                const detailName = dc.closest('label').querySelector('.detail-name').textContent.trim();
+                const durasi = parseInt(dc.dataset.durasi || 0);
+                grouped[masterId].details.push(detailName + ' (' + durasi + ' hr)');
+                grouped[masterId].totalDurasi += durasi;
                 total += durasi;
-                const li = document.createElement('li');
-                li.textContent = name + ' (' + durasi + ' hari)';
-                selectedList.appendChild(li);
             });
+
+            for (const [mid, group] of Object.entries(grouped)) {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${group.name}</strong> <span class="text-xs text-gray-500">(${group.totalDurasi} hr)</span>
+                                <ul class="list-disc pl-5 text-xs text-gray-600 mt-1 mb-3"><li>${group.details.join('</li><li>')}</li></ul>`;
+                selectedList.appendChild(li);
+            }
+
             totalDurasiEl.textContent = total;
 
             const mulai = document.getElementById('tanggal_mulai').value;
@@ -145,8 +200,6 @@
                 tglSelesaiEl.textContent = '—';
             }
         }
-
-        checkboxes.forEach(c => c.addEventListener('change', updateSummary));
         document.getElementById('tanggal_mulai').addEventListener('change', updateSummary);
 
         // Search

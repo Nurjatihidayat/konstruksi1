@@ -66,15 +66,29 @@ class Project extends Model
         return $this->hasMany(ProjectDailyLog::class)->orderBy('tanggal', 'desc');
     }
 
+    public function projectDetailPekerjaans()
+    {
+        return $this->hasMany(ProjectDetailPekerjaan::class);
+    }
+
+    public function detailPekerjaans()
+    {
+        return $this->belongsToMany(
+            DetailPekerjaan::class,
+            'project_detail_pekerjaans',
+            'project_id',
+            'detail_pekerjaan_id'
+        );
+    }
+
     // ---- Helpers ----
 
-    /** All detail materials from all selected master pekerjaan */
+    /** All detail materials from all selected detail pekerjaan in this project */
     public function getAllDetailMaterials()
     {
-        $masterIds = $this->projectMasterPekerjaans()->pluck('master_pekerjaan_id');
-        return DetailMaterial::whereHas('detailPekerjaan', function ($q) use ($masterIds) {
-            $q->whereIn('master_pekerjaan_id', $masterIds);
-        })->with('detailPekerjaan.masterPekerjaan')->get();
+        $detailIds = $this->projectDetailPekerjaans()->pluck('detail_pekerjaan_id');
+        return DetailMaterial::whereIn('detail_pekerjaan_id', $detailIds)
+            ->with('detailPekerjaan.masterPekerjaan')->get();
     }
 
     /** Progres calculated from working days vs total planned days */

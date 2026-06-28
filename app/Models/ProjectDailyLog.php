@@ -11,6 +11,7 @@ class ProjectDailyLog extends Model
 
     protected $fillable = [
         'project_id',
+        'detail_pekerjaan_id',
         'manager_id',
         'tanggal',
         'status',
@@ -24,6 +25,11 @@ class ProjectDailyLog extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function detailPekerjaan()
+    {
+        return $this->belongsTo(DetailPekerjaan::class);
+    }
+
     public function manager()
     {
         return $this->belongsTo(User::class, 'manager_id');
@@ -32,5 +38,10 @@ class ProjectDailyLog extends Model
     public function materialUsages()
     {
         return $this->hasMany(DailyLogMaterial::class, 'project_daily_log_id');
+    }
+
+    public function detailPekerjaans()
+    {
+        return $this->belongsToMany(DetailPekerjaan::class, 'daily_log_detail_pekerjaans');
     }
 }

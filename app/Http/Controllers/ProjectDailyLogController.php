@@ -20,6 +20,8 @@ class ProjectDailyLogController extends Controller
         if ($user->role == 'manajer' && $project->manager_id != $user->id) abort(403);
 
         $request->validate([
+            'detail_pekerjaan_ids'   => 'required|array|min:1',
+            'detail_pekerjaan_ids.*' => 'exists:detail_pekerjaans,id',
             'tanggal'     => 'required|date',
             'status'      => 'required|in:berjalan,libur',
             'keterangan'  => 'nullable|string|max:500',
@@ -43,6 +45,9 @@ class ProjectDailyLogController extends Controller
                 'photo_path'  => $photoPath ?? null,
             ]
         );
+
+        // Sync selected sub-pekerjaan
+        $log->detailPekerjaans()->sync($request->detail_pekerjaan_ids);
 
         // Process material usage (only if status is 'berjalan')
         if ($request->status === 'berjalan' && $request->has('materials')) {

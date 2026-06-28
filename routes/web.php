@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
     //  Admin, Manajer & Gudang routes
     // =====================
     Route::middleware(['role:admin,manajer,gudang'])->group(function () {
+        Route::post('projects/{project}/materials/{material}/approve', [MaterialController::class, 'approveKebutuhan'])->name('projects.materials.approve')->middleware('role:admin');
         Route::resource('projects.materials', MaterialController::class)->except(['index', 'show']);
     });
 

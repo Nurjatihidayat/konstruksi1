@@ -46,6 +46,8 @@ class ProjectController extends Controller
             'manager_id'               => 'required|exists:users,id',
             'master_pekerjaan_ids'     => 'required|array|min:1',
             'master_pekerjaan_ids.*'   => 'exists:master_pekerjaans,id',
+            'detail_pekerjaan_ids'     => 'required|array|min:1',
+            'detail_pekerjaan_ids.*'   => 'exists:detail_pekerjaans,id',
         ]);
 
         $kodeProyek = $request->input('kode_proyek');
@@ -53,12 +55,14 @@ class ProjectController extends Controller
             $kodeProyek = 'PRJ-' . strtoupper(Str::random(5));
         }
 
-        // Hitung total durasi & tanggal selesai berdasarkan semua master pekerjaan
-        $masterIds   = $request->master_pekerjaan_ids;
-        $masters     = MasterPekerjaan::whereIn('id', $masterIds)->get()->keyBy('id');
+        // Ambil semua detail pekerjaan terpilih beserta durasinya
+        $detailIds = $request->detail_pekerjaan_ids;
+        $details   = \App\Models\DetailPekerjaan::whereIn('id', $detailIds)->get()->keyBy('id');
+        
+        // Hitung total durasi berdasarkan durasi detail pekerjaan terpilih
         $totalDurasi = 0;
-        foreach ($masterIds as $mid) {
-            $totalDurasi += $masters[$mid]->total_durasi_hari ?? 0;
+        foreach ($detailIds as $did) {
+            $totalDurasi += $details[$did]->durasi_hari ?? 0;
         }
 
         $tanggalMulai   = Carbon::parse($request->tanggal_mulai);
@@ -76,13 +80,20 @@ class ProjectController extends Controller
             'status_proyek'   => 'berjalan',
         ]);
 
-        // Simpan pivot per master pekerjaan (berurutan)
-        $cursor = Carbon::parse($request->tanggal_mulai);
+        // Simpan pivot project_master_pekerjaans
+        $masterIds = $request->master_pekerjaan_ids;
+        $masters   = MasterPekerjaan::whereIn('id', $masterIds)->get()->keyBy('id');
+        $cursor    = Carbon::parse($request->tanggal_mulai);
+
         foreach ($masterIds as $urutan => $mid) {
-            $master = $masters[$mid];
-            $durasi = $master->total_durasi_hari ?? 0;
-            $tglMulai   = $cursor->copy();
-            $tglSelesai = $cursor->copy()->addDays($durasi);
+            // Durasi master pekerjaan di proyek ini dihitung hanya dari detail pekerjaan terpilih di dalam master ini
+            $masterDetails = \App\Models\DetailPekerjaan::where('master_pekerjaan_id', $mid)
+                ->whereIn('id', $detailIds)
+                ->get();
+            
+            $masterDurasi = $masterDetails->sum('durasi_hari');
+            $tglMulai     = $cursor->copy();
+            $tglSelesai   = $cursor->copy()->addDays($masterDurasi);
 
             ProjectMasterPekerjaan::create([
                 'project_id'              => $project->id,
@@ -92,24 +103,31 @@ class ProjectController extends Controller
                 'tanggal_selesai_rencana' => $tglSelesai->toDateString(),
             ]);
 
-            $cursor->addDays($durasi);
+            $cursor->addDays($masterDurasi);
         }
 
-        // Auto-populate project materials from all detail materials
-        $this->populateProjectMaterials($project, $masterIds);
+        // Simpan detail pekerjaan yang terpilih
+        foreach ($detailIds as $did) {
+            \App\Models\ProjectDetailPekerjaan::create([
+                'project_id'          => $project->id,
+                'detail_pekerjaan_id' => $did,
+            ]);
+        }
+
+        // Auto-populate project materials only from selected detail_pekerjaans
+        $this->populateProjectMaterials($project, $detailIds);
 
         ActivityLog::create([
             'user_id'     => auth()->id(),
-            'description' => 'Membuat proyek baru: ' . $project->nama_proyek,
+            'description' => 'Membuat proyek baru dengan detail pekerjaan terpilih: ' . $project->nama_proyek,
         ]);
 
         return redirect()->route('projects.index')->with('success', 'Proyek berhasil dibuat.');
     }
 
-    /** Auto-populate project materials from detail_materials of all master pekerjaan */
-    private function populateProjectMaterials(Project $project, array $masterIds)
+    /** Auto-populate project materials from detail_materials of selected detail_pekerjaans */
+    private function populateProjectMaterials(Project $project, array $detailPekerjaanIds)
     {
-        $detailPekerjaanIds = \App\Models\DetailPekerjaan::whereIn('master_pekerjaan_id', $masterIds)->pluck('id');
         $detailMaterials = \App\Models\DetailMaterial::whereIn('detail_pekerjaan_id', $detailPekerjaanIds)->get();
 
         // Group by nama_material to avoid duplicates
@@ -117,7 +135,6 @@ class ProjectController extends Controller
         foreach ($detailMaterials as $dm) {
             $key = strtolower(trim($dm->nama_material));
             if (!isset($grouped[$key])) {
-                // Try to find matching material in master materials table
                 $material = Material::where('nama_material', $dm->nama_material)->first();
                 if ($material) {
                     $grouped[$key] = ['material_id' => $material->id, 'qty' => $dm->qty, 'satuan' => $dm->satuan];
@@ -149,6 +166,7 @@ class ProjectController extends Controller
             'manager',
             'dailyLogs.materialUsages.material',
             'dailyLogs.manager',
+            'dailyLogs.detailPekerjaans',
         ])->findOrFail($id);
 
         if (auth()->user()->role == 'gudang' && $project->id != auth()->user()->assigned_project_id) {
@@ -163,10 +181,7 @@ class ProjectController extends Controller
         // Materials for usage form (from project materials)
         $projectMaterials = $project->projectMaterials->load('material');
 
-        // Today's log if exists
-        $todayLog = $project->dailyLogs()->where('tanggal', today()->toDateString())->first();
-
-        return view('projects.show', compact('project', 'progresOtomatis', 'projectMaterials', 'todayLog'));
+        return view('projects.show', compact('project', 'progresOtomatis', 'projectMaterials'));
     }
 
     public function edit(string $id)

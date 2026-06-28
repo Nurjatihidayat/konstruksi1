@@ -14,6 +14,7 @@ class ProjectMaterial extends Model
         'material_id',
         'jumlah_rencana',      // From detail material qty
         'jumlah_kebutuhan',
+        'jumlah_kebutuhan_pending',
         'jumlah_dialokasikan', // On the way
         'jumlah_tersedia',     // At site
         'total_diterima',      // Cumulative sent

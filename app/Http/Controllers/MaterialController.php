@@ -74,18 +74,52 @@ class MaterialController extends Controller
 
         $projectMaterial = $project->projectMaterials()->where('material_id', $material->id)->first();
         if ($projectMaterial) {
-            $projectMaterial->update([
-                'jumlah_rencana' => $request->jumlah_kebutuhan,
-                'jumlah_kebutuhan' => $request->jumlah_kebutuhan
-            ]);
+            if (auth()->user()->role === 'admin') {
+                $projectMaterial->update([
+                    'jumlah_kebutuhan' => $request->jumlah_kebutuhan,
+                    'jumlah_rencana' => $request->jumlah_kebutuhan // optional if you want to keep them synced
+                ]);
+                $msg = 'Kebutuhan material proyek berhasil diperbarui.';
+            } else {
+                $projectMaterial->update([
+                    'jumlah_kebutuhan_pending' => $request->jumlah_kebutuhan
+                ]);
+                $msg = 'Pengajuan perubahan kebutuhan material menunggu approval Admin.';
+            }
         }
 
         ActivityLog::create([
             'user_id' => auth()->id(),
-            'description' => 'Memperbarui kebutuhan material ' . $material->nama_material . ' pada proyek ' . $project->nama_proyek
+            'description' => 'Mengajukan/memperbarui kebutuhan material ' . $material->nama_material . ' pada proyek ' . $project->nama_proyek
         ]);
 
-        return redirect()->route('projects.show', $project)->with('success', 'Kebutuhan material proyek berhasil diperbarui.');
+        return redirect()->route('projects.show', $project)->with('success', $msg ?? 'Berhasil.');
+    }
+
+    public function approveKebutuhan(Project $project, Material $material)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Hanya admin yang dapat menyetujui perubahan kebutuhan material.');
+        }
+
+        $projectMaterial = $project->projectMaterials()->where('material_id', $material->id)->firstOrFail();
+        
+        if ($projectMaterial->jumlah_kebutuhan_pending !== null) {
+            $projectMaterial->update([
+                'jumlah_kebutuhan' => $projectMaterial->jumlah_kebutuhan_pending,
+                'jumlah_rencana' => $projectMaterial->jumlah_kebutuhan_pending, // optional
+                'jumlah_kebutuhan_pending' => null
+            ]);
+
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'description' => 'Menyetujui perubahan kebutuhan material ' . $material->nama_material . ' pada proyek ' . $project->nama_proyek
+            ]);
+
+            return redirect()->back()->with('success', 'Perubahan kebutuhan material disetujui.');
+        }
+
+        return redirect()->back()->with('info', 'Tidak ada perubahan yang perlu disetujui.');
     }
 
     public function destroy(Project $project, Material $material)
