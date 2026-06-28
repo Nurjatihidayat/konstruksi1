@@ -462,7 +462,7 @@
                                 <select name="status" required id="statusSelect"
                                     class="w-full bg-gray-50 border-transparent rounded-2xl focus:ring-indigo-500 focus:bg-white shadow-inner text-sm">
                                     <option value="berjalan">🟢 Berjalan</option>
-                                    <option value="libur">🟡 Libur / Hujan</option>
+                                    <option value="libur">🟡 Pending</option>
                                 </select>
                             </div>
                         </div>
